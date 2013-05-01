@@ -1,0 +1,10 @@
+# Ignore emacs backup files:
+*~
+*.hi
+*.o
+\#*\#
+dist
+cabal-dev
+*.tex
+*.log
+*.hers
