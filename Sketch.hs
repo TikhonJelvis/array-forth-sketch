@@ -7,14 +7,14 @@ import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax
 
 parse :: String -> [Exp]
-parse "" = []
+parse ""         = []
 parse ('$':rest) = VarE (mkName $ takeWhile isAlphaNum rest) :
                    parse (dropWhile isAlphaNum rest)
-parse rest = LitE (StringL $ takeWhile (/= '$') rest) :
-             parse (dropWhile (/= '$') rest)
+parse rest       = LitE (StringL $ takeWhile (/= '$') rest) :
+                   parse (dropWhile (/= '$') rest)
 
 toExp :: [Exp] -> Exp
-toExp = foldr1 $ AppE . AppE (VarE $ mkName "combine")
+toExp = foldr1 $ AppE . AppE (VarE $ mkName "++")
 
 trim :: String -> String
 trim = dropWhile (== '\n') . reverse . dropWhile (== '\n') . reverse
