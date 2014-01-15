@@ -104,7 +104,7 @@ void push_r(State s, bit[18] value) {
 }
 
 bit[18] ret() {
-  state.p = r;
+  s.p = s.r;
   return pop_r(s);
 }
 
@@ -171,6 +171,10 @@ bit[18] store() {
   bit[18] temp = pop_d(s);
   s.memory[to_int(s.a)] = temp;
   return 0;
+}
+
+bit[18] multiplyStep() {
+  return 0; // I'm too lazy to implement multiply step at the moment.
 }
 
 bit[18] times2() {
