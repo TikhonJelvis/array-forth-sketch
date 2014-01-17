@@ -6,6 +6,7 @@
 
 import           Data.Char
 import           Data.Data
+import           Data.Functor
 import           Data.List
 import           Data.String
 
@@ -13,7 +14,11 @@ import           Language.ArrayForth.Opcode
 import           Language.ArrayForth.Parse
 import           Language.ArrayForth.Program
 
+import           Numeric
+
 import           System.Process
+
+import           Text.Printf
 
 import           Sketch
 
@@ -22,10 +27,11 @@ instance IsString [Opcode] where fromString = map (\ (Opcode o) -> o) . read
 deriving instance Typeable Opcode
 deriving instance Data Opcode
 
-main = do writeFile "generated-sketch.sk" $ harness "over over or a! and a or" 4
+main = do writeFile "generated-sketch-new.sk" $ harness "over over or a! 5 and a or" 4
           -- result <- readProcess "./sketch" ["generated-sketch.sk"] ""
           -- print $ parseSk result
 
+parseSk :: String -> [Maybe Constr]
 parseSk = map (readInstr . takeWhile isLetter . dropWhile (not . isLetter)) .
           takeWhile (not . isInfixOf "for") .
           filter (not . isInfixOf "bit[18]") .
@@ -35,7 +41,7 @@ parseSk = map (readInstr . takeWhile isLetter . dropWhile (not . isLetter)) .
           lines
   where readInstr = readConstr $ dataTypeOf Or
 
-harness :: [Opcode] -> Int -> String
+harness :: Program -> Int -> String
 harness spec n = [sketch|
 
 include "instrs.sk";
@@ -67,10 +73,22 @@ struct Ret {
   where specProgram = intercalate ";\n  " $ map call spec
         holes = genHoles n
 
-call instr = let (f:rest) = showConstr $ toConstr instr in toLower f : rest ++ "()"
+callOpcode :: Opcode -> String
+callOpcode instr = let (f:rest) = showConstr $ toConstr instr in toLower f : rest ++ "()"
 
+callLiteral :: F18Word -> String
+callLiteral = printf "loadLiteral({%s})" . toBits
+  where toBits n = intercalate "," . pad $ showIntAtBase 2 (head . show) n ""
+        pad ls | length ls > 18 = return <$> ls
+               | otherwise      = return <$> replicate (18 - length ls) '0' ++ ls
+
+call :: Instruction -> String
+call (Opcode op) = callOpcode op
+call (Number n)  = callLiteral n
+
+genHoles :: Int -> String
 genHoles n = drop 2 . unlines $ replicate n [sketch|
-  ignore = {| $calls |};
+  ignore = {| $opcodeCalls | loadLiteral(??) |};
 |]
-  where calls = intercalate " | " . map call . filter supported $  opcodes
+  where opcodeCalls = intercalate " | " . map callOpcode . filter supported $ opcodes
         supported opcode = not (isJump opcode) && opcode /= MultiplyStep && opcode /= Ret

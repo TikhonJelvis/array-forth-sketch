@@ -253,3 +253,8 @@ bit[18] setA() {
   s.a = pop_d(s);
   return 0;
 }
+
+bit[18] loadLiteral(bit[18] literal) {
+  push_d(s, literal);
+  return 0;
+}
