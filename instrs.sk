@@ -57,6 +57,20 @@ State start() {
                    memory = {});
 }
 
+State s = new State(a      = 0,
+                    b      = 0,
+                    p      = 0,
+                    r      = 0,
+                    s      = 0,
+                    t      = 0,
+                    data   = new Stack(ptr = 0, body = {0,0,0,0,0,0,0,0}),
+                    ret    = new Stack(ptr = 0, body = {0,0,0,0,0,0,0,0}),
+                    memory = {});
+
+void reset() {
+  s = start();
+}
+
 bit[BIT_SIZE] pop_d(State s) {
   bit[BIT_SIZE] temp = s.t;
   bit[BIT_SIZE] res = pop_s(s.data);
