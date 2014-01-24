@@ -32,7 +32,7 @@ deriving instance Data Opcode
 data Settings =
   Settings { supportedOpcodes :: [Opcode]
            , literalHoles     :: Bool      -- ^ allow literal numbers in sketch?
-           , size             :: Int       -- ^ number of holes in sketch
+           , holes            :: Int       -- ^ number of holes in sketch
            , bits             :: Int       -- ^ number of bits in Forth words
            }
 -- IMPORTANT: Right now, you have to manually update instrs.sk with the bit size!
@@ -40,7 +40,7 @@ data Settings =
 defaults :: Settings
 defaults = Settings { supportedOpcodes = supported
                     , literalHoles     = True
-                    , size             = 6
+                    , holes            = 6
                     , bits             = 18
                     }
 
@@ -75,12 +75,13 @@ supported = [ FetchP
             , SetA
             ]
 
+-- "over over or a! and a or"
 main :: IO ()
-main = writeFile "generated-sketch.sk" $ harness settings "over over or a! and a or"
-  where settings = defaults { size = 4 } -- this is how you can "modify" the default settings
+main = writeFile "generated-sketch.sk" $ harness settings "3 10 +"
+  where settings = defaults { holes = 1 } -- this is how you can "modify" the default settings
 
 harness :: Settings -> Program -> String
-harness settings@Settings { size, bits } spec = [sketch|
+harness settings@Settings { holes, bits } spec = [sketch|
 
 include "instrs.sk";
 pragma options "--bnd-int-range 1000";
@@ -103,21 +104,21 @@ struct Ret {
   s.t = t_reg;
   s.s = s_reg;
   bit[$bitSize] ignore = 0;
-  $holes
+  $holesSk
   return |Ret|(s = s.s, t = s.t);
 }
 
 |]
   where specProgram = intercalate ";\n  " $ map (call bits) spec
         bitSize = show bits
-        holes = genHoles settings size
+        holesSk = genHoles settings holes
 
 callOpcode :: Opcode -> String
 callOpcode instr = let (f:rest) = showConstr $ toConstr instr in toLower f : rest ++ "()"
 
 callLiteral :: Int -> F18Word -> String
 callLiteral bitSize = printf "loadLiteral({%s})" . toBits
-  where toBits n = intercalate "," . pad $ showIntAtBase 2 (head . show) n ""
+  where toBits n = intercalate "," . reverse . pad $ showIntAtBase 2 (head . show) n ""
         pad ls | length ls > bitSize = return <$> ls
                | otherwise = return <$> replicate (bitSize - length ls) '0' ++ ls
 

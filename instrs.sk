@@ -2,16 +2,7 @@ int MEM_SIZE = 10; // What value should this be?
 int BIT_SIZE = 18;
 
 int to_int(bit[BIT_SIZE] n) {
-  int res = 0;
-  int i_n = 1;
-  for (int i = 0; i < BIT_SIZE; i++) {
-    if (n[i]) {
-      res += i_n;
-    }
-    i_n *= 2;
-  }
-
-  return res;
+  return (int) n;
 }
 
 struct Stack {
@@ -186,8 +177,9 @@ bit[BIT_SIZE] not() {
 }
 
 bit[BIT_SIZE] plus() {
-  bit[BIT_SIZE] temp = pop_d(s);
-  s.t += temp;
+  bit[BIT_SIZE] res = s.t + s.s;
+  pop_d(s);
+  s.t = res;
   return 0;
 }
 
