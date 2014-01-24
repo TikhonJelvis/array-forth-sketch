@@ -8,3 +8,4 @@ cabal-dev
 *.tex
 *.log
 *.hers
+tags
