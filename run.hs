@@ -116,7 +116,7 @@ callOpcode :: Opcode -> String
 callOpcode instr = let (f:rest) = showConstr $ toConstr instr in toLower f : rest ++ "()"
 
 callLiteral :: Int -> F18Word -> String
-callLiteral bitSize = printf "loadLiteral(s, {%s})" . toBits
+callLiteral bitSize = printf "loadLiteral({%s})" . toBits
   where toBits n = intercalate "," . pad $ showIntAtBase 2 (head . show) n ""
         pad ls | length ls > bitSize = return <$> ls
                | otherwise = return <$> replicate (bitSize - length ls) '0' ++ ls
