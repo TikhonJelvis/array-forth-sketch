@@ -1,8 +1,7 @@
-module Sketch where
+module SketchQQ where
 
 import Data.Char
 
-import Language.Haskell.TH.Lib
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Syntax
 

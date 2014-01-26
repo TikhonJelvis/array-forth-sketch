@@ -5,25 +5,21 @@
 {-# LANGUAGE QuasiQuotes        #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
+module GenerateSketch where
+
 import           Data.Char
 import           Data.Data
 import           Data.Functor
 import           Data.List
-import           Data.String
 
 import           Language.ArrayForth.Opcode
-import           Language.ArrayForth.Parse
 import           Language.ArrayForth.Program
 
 import           Numeric
 
-import           System.Process
-
 import           Text.Printf
 
-import           Sketch
-
-instance IsString [Opcode] where fromString = map (\ (Opcode o) -> o) . read
+import           SketchQQ
 
 deriving instance Typeable Opcode
 deriving instance Data Opcode
@@ -37,6 +33,7 @@ data Settings =
            }
 -- IMPORTANT: Right now, you have to manually update instrs.sk with the bit size!
 
+--  | Some sane default settings.
 defaults :: Settings
 defaults = Settings { supportedOpcodes = supported
                     , literalHoles     = True
@@ -74,11 +71,6 @@ supported = [ FetchP
             , SetB
             , SetA
             ]
-
--- "over over or a! and a or"
-main :: IO ()
-main = writeFile "generated-sketch.sk" $ harness settings "3 10 +"
-  where settings = defaults { holes = 1 } -- this is how you can "modify" the default settings
 
 harness :: Settings -> Program -> String
 harness settings@Settings { holes, bits } spec = [sketch|
@@ -125,6 +117,7 @@ callLiteral bitSize = printf "loadLiteral({%s})" . toBits
 call :: Int -> Instruction -> String
 call _ (Opcode op)      = callOpcode op
 call bitSize (Number n) = callLiteral bitSize n
+call _ _                = error "Specs with jumps, labels and holes are not supported!"
 
 genHoles :: Settings -> Int -> String
 genHoles Settings { supportedOpcodes, literalHoles } n =
