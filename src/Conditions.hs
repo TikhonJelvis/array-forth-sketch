@@ -32,7 +32,7 @@ data Array = Data | Ret | Memory deriving (Show, Eq, Bounded, Enum)
 instance Read Array where
   readsPrec _ str | Just (arr, rest) <- array = [(arr, rest)]
     where array = (, dropWhile (/= ' ') str) <$> (toArray =<< listToMaybe (words str))
-          toArray name = find ((== name) . map toLower . show) $ [Data ..]
+          toArray name = find ((== name) . show) $ [Data ..]
   readsPrec _ _ = []
 
 -- | Which parts of the state to look at for input or output.
@@ -84,10 +84,12 @@ arguments = toList $ printf "bit[BIT_SIZE] %s_input" . toName
 fieldAssignments :: [Condition] -> String
 fieldAssignments = toStatements go
   where go reg@Register{}     = printf "s.%s = %s_input" (toName reg) (toName reg)
-        go arr@(Array _ size) = printf "s.%s = %s_input[0::%d]" (toName arr) (toName arr) size
+        go arr@(Array Memory size) = printf "s.%s = %s_input[0::%d]" (toName arr) (toName arr) size
+        go arr@(Array _ size) = printf "s.%s.body = %s_input[0::%d]" (toName arr) (toName arr) size
 
 -- | Assignements to the returned |Ret| struct.
 returnedValues :: [Condition] -> String
 returnedValues = toList go
   where go reg@Register{}     = printf "%s = s.%s" (toName reg) (toName reg)
-        go arr@(Array _ size) = printf "%s = s.%s[0::%d]" (toName arr) (toName arr) size
+        go arr@(Array Memory size) = printf "%s = s.%s[0::%d]" (toName arr) (toName arr) size
+        go arr@(Array _ size) = printf "%s = s.%s.body[0::%d]" (toName arr) (toName arr) size

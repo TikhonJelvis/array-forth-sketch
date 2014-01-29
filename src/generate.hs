@@ -57,13 +57,13 @@ sketchOptions =
             <> value supported
             <> metavar "OPCODES" )
            <*> option
-             ( help "Which part of the state to take as input to the sketch. Specify as a string of register names or (data|return|memory) with a number, like: \"r s t data 4 memory 10\"."
+             ( help "Which part of the state to take as input to the sketch. Specify as a string of register names or (Data|Ret|Memory) with a number, like: \"r s t Data 4 Memory 10\"."
             <> long "inputs"
             <> short 'i'
             <> value [Register S, Register T]
             <> metavar "REGISTERS" )
            <*> option
-             ( help "Which part of the state to take as output from the sketch. Specify as a string of register names or (data|return|memory) with a number, like: \"r s t data 4 memory 10\"."
+             ( help "Which part of the state to take as output from the sketch. Specify as a string of register names or (Data|Ret|Memory) with a number, like: \"r s t Data 4 Memory 10\"."
             <> long "outputs"
             <> short 'o'
             <> value [Register S, Register T]
