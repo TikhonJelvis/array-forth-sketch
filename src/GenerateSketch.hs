@@ -1,8 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances  #-}
-{-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE QuasiQuotes        #-}
+{-# LANGUAGE RecordWildCards    #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
 module GenerateSketch where
@@ -20,7 +21,7 @@ import           Numeric
 import           Text.Printf
 
 import qualified Conditions
-import           Conditions (Condition (..), Register (..), Array (..))
+import           Conditions (Condition (..))
 import           SketchQQ
 
 deriving instance Typeable Opcode
@@ -31,21 +32,11 @@ data Settings =
   Settings { supportedOpcodes :: [Opcode]
            , inputs           :: [Condition]
            , outputs          :: [Condition]
+           , prefix           :: FilePath  -- ^ the prefix to use to import instrs.sk
            , literalHoles     :: Bool      -- ^ allow literal numbers in sketch?
            , holes            :: Int       -- ^ number of holes in sketch
            , bits             :: Int       -- ^ number of bits in Forth words
-           }
--- IMPORTANT: Right now, you have to manually update instrs.sk with the bit size!
-
---  | Some sane default settings.
-defaults :: Settings
-defaults = Settings { supportedOpcodes = supported
-                    , inputs           = [Register S, Register T]
-                    , outputs          = [Register S, Register T]
-                    , literalHoles     = True
-                    , holes            = 6
-                    , bits             = 18
-                    }
+           } deriving (Show)
 
 -- | The usual set of supported instructions. Pretty much anything
 --   without a literal address encoded in the instruction.
@@ -79,9 +70,9 @@ supported = [ FetchP
             ]
 
 harness :: Settings -> Program -> String
-harness settings@Settings { holes, bits, inputs, outputs } spec = [sketch|
+harness settings@Settings {..} spec = [sketch|
 
-include "instrs.sk";
+include "$prefix-instrs.sk";
 pragma options "--bnd-int-range 1000";
 
 struct Ret {
@@ -105,10 +96,9 @@ struct Ret {
 
 |]
   where specProgram = intercalate ";\n  " $ map (call bits) spec
-        bitSize = show bits
         holesSk = genHoles settings holes
 
-        fields      = Conditions.fields inputs
+        fields      = Conditions.fields outputs
         arguments   = Conditions.arguments inputs
         assignments = Conditions.fieldAssignments inputs
         retVals     = Conditions.returnedValues outputs
@@ -133,5 +123,5 @@ genHoles Settings { supportedOpcodes, literalHoles } n =
   ignore = {| $opcodeCalls $literalHole |};
 |]
   where opcodeCalls = intercalate " | " $ map callOpcode supportedOpcodes
-        literalHole | literalHoles = " | loadLiteral(??)"
+        literalHole | literalHoles = "| loadLiteral(??)"
                     | otherwise    = ""
