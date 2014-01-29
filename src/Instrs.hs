@@ -14,7 +14,16 @@ int MEM_SIZE = $memorySize;
 int BIT_SIZE = $bitSize;
 
 int to_int(bit[BIT_SIZE] n) {
-  return (int) n;
+  int res = 0;
+  int i_n = 1;
+  for (int i = 0; i < BIT_SIZE; i++) {
+    if (n[i]) {
+      res += i_n;
+    }
+    i_n *= 2;
+  }
+
+  return res;
 }
 
 struct Stack {
