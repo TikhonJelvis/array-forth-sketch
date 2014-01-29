@@ -76,7 +76,7 @@ include "$prefix-instrs.sk";
 pragma options "--bnd-int-range 1000";
 
 struct Ret {
-  $fields
+  $fields;
 }
            
 |Ret| spec($arguments) {

@@ -67,12 +67,12 @@ toList f = intercalate ", " . map f
 
 -- | Produce an indented list of statements, one on each line, with
 --   terminating semi-colons.
-toStatements :: Char -> (Condition -> String) -> [Condition] -> String
-toStatements terminator f = intercalate (terminator : "\n  ") . map f
+toStatements :: (Condition -> String) -> [Condition] -> String
+toStatements f = intercalate (";\n  ") . map f
 
 -- | The fields of the Ret struct definition.
 fields :: [Condition] -> String
-fields = toStatements ',' go
+fields = toStatements go
   where go reg@Register{}     = printf "bit[BIT_SIZE] %s" $ toName reg
         go arr@(Array _ size) = printf "bit[BIT_SIZE][%d] %s" size $ toName arr
 
@@ -82,7 +82,7 @@ arguments = toList $ printf "bit[BIT_SIZE] %s_input" . toName
 
 -- | Assignments to the starting state (s).
 fieldAssignments :: [Condition] -> String
-fieldAssignments = toStatements ';' go
+fieldAssignments = toStatements go
   where go reg@Register{}     = printf "s.%s = %s_input" (toName reg) (toName reg)
         go arr@(Array _ size) = printf "s.%s = %s_input[0::%d]" (toName arr) (toName arr) size
 
