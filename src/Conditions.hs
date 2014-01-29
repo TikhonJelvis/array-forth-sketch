@@ -34,9 +34,14 @@ name (Array arr _)  = toLower <$> show arr
 list :: (Condition -> String) -> [Condition] -> String
 list f = intercalate ", " . map f
 
+-- | Produce an indented list of statements, one on each line, with
+--   terminating semi-colons.
+statements :: Char -> (Condition -> String) -> [Condition] -> String
+statements terminator f = intercalate (terminator : "\n  ") . map f
+
 -- | The fields of the Ret struct definition.
 fields :: [Condition] -> String
-fields = init . unlines . (map $ ("  " ++) . go)
+fields = statements ',' go
   where go reg@Register{}     = printf "bit[BIT_SIZE] %s" $ name reg
         go arr@(Array _ size) = printf "bit[BIT_SIZE][%d] %s" size $ name arr
 
@@ -46,7 +51,7 @@ arguments = list $ printf "bit[BIT_SIZE] %s_input" . name
 
 -- | Assignments to the starting state (s).
 fieldAssignments :: [Condition] -> String
-fieldAssignments = list go
+fieldAssignments = statements ';' go
   where go reg@Register{}     = printf "s.%s = %s_input" (name reg) (name reg)
         go arr@(Array _ size) = printf "s.%s = %s_input[0::%d]" (name arr) (name arr) size
 

@@ -19,6 +19,8 @@ import           Numeric
 
 import           Text.Printf
 
+import qualified Conditions
+import           Conditions (Condition (..), Register (..), Array (..))
 import           SketchQQ
 
 deriving instance Typeable Opcode
@@ -27,6 +29,8 @@ deriving instance Data Opcode
 -- | Settings that control how the problem gets synthesized.
 data Settings =
   Settings { supportedOpcodes :: [Opcode]
+           , inputs           :: [Condition]
+           , outputs          :: [Condition]
            , literalHoles     :: Bool      -- ^ allow literal numbers in sketch?
            , holes            :: Int       -- ^ number of holes in sketch
            , bits             :: Int       -- ^ number of bits in Forth words
@@ -36,6 +40,8 @@ data Settings =
 --  | Some sane default settings.
 defaults :: Settings
 defaults = Settings { supportedOpcodes = supported
+                    , inputs           = [Register S, Register T]
+                    , outputs          = [Register S, Register T]
                     , literalHoles     = True
                     , holes            = 6
                     , bits             = 18
@@ -73,37 +79,39 @@ supported = [ FetchP
             ]
 
 harness :: Settings -> Program -> String
-harness settings@Settings { holes, bits } spec = [sketch|
+harness settings@Settings { holes, bits, inputs, outputs } spec = [sketch|
 
 include "instrs.sk";
 pragma options "--bnd-int-range 1000";
 
 struct Ret {
-  bit[$bitSize] s;
-  bit[$bitSize] t;
+  $fields
 }
            
-|Ret| spec(bit[$bitSize] t_reg, bit[$bitSize] s_reg) {
+|Ret| spec($arguments) {
   reset();
-  s.t = t_reg;
-  s.s = s_reg;
+  $assignments;
   $specProgram;
-  return |Ret|(s = s.s, t = s.t);
+  return |Ret|($retVals);
 }
 
-|Ret| sketch(bit[$bitSize] t_reg, bit[$bitSize] s_reg) implements spec {
+|Ret| sketch($arguments) implements spec {
   reset();
-  s.t = t_reg;
-  s.s = s_reg;
-  bit[$bitSize] ignore = 0;
+  $assignments;
+  bit[BIT_SIZE] ignore = 0;
   $holesSk
-  return |Ret|(s = s.s, t = s.t);
+  return |Ret|($retVals);
 }
 
 |]
   where specProgram = intercalate ";\n  " $ map (call bits) spec
         bitSize = show bits
         holesSk = genHoles settings holes
+
+        fields      = Conditions.fields inputs
+        arguments   = Conditions.arguments inputs
+        assignments = Conditions.fieldAssignments inputs
+        retVals     = Conditions.returnedValues outputs
 
 callOpcode :: Opcode -> String
 callOpcode instr = let (f:rest) = showConstr $ toConstr instr in toLower f : rest ++ "()"
@@ -117,7 +125,7 @@ callLiteral bitSize = printf "loadLiteral({%s})" . toBits
 call :: Int -> Instruction -> String
 call _ (Opcode op)      = callOpcode op
 call bitSize (Number n) = callLiteral bitSize n
-call _ _                = error "Specs with jumps, labels and holes are not supported!"
+call _ _                = error "Specs with jumps, labels or holes are not supported!"
 
 genHoles :: Settings -> Int -> String
 genHoles Settings { supportedOpcodes, literalHoles } n =
