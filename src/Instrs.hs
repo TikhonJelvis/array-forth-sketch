@@ -5,13 +5,13 @@ module Instrs where
 import SketchQQ
 
 generateInstrs :: IO ()
-generateInstrs = writeFile "instrs.sk" instrs
+generateInstrs = writeFile "instrs.sk" $ instrs 18
 
-instrs :: String
-instrs = [sketch|
+instrs :: Int -> String
+instrs bits = [sketch|
 
 int MEM_SIZE = 10; // What value should this be?
-int BIT_SIZE = 18;
+int BIT_SIZE = $bitSize;
 
 int to_int(bit[BIT_SIZE] n) {
   return (int) n;
@@ -257,3 +257,4 @@ bit[BIT_SIZE] loadLiteral(bit[BIT_SIZE] literal) {
 }
 
 |]
+  where bitSize = show bits
