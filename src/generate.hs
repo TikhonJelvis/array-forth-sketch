@@ -15,6 +15,7 @@ import           Instrs
 
 data GenerateSettings =
   GenerateSettings { sketchSettings :: Settings
+                   , memorySize     :: Int  
                    , program        :: Program
                    } deriving (Show)
 
@@ -23,7 +24,8 @@ main :: IO ()
 main = do GenerateSettings {..} <- execParser cmdParser
           let Settings {..} = sketchSettings
           writeFile (printf "%s-sketch.sk" prefix) $ harness sketchSettings program
-          writeFile (printf "%s-instrs.sk" prefix) $ instrs bits
+          writeFile (printf "%s-instrs.sk" prefix) $ instrs bits memorySize
+          printf "Generated %s-sketch.sk and %s-instrs.sk.\n" prefix prefix
 
 cmdParser :: ParserInfo GenerateSettings
 cmdParser = info (helper <*> options)
@@ -32,6 +34,12 @@ cmdParser = info (helper <*> options)
 
 options :: Parser GenerateSettings
 options = GenerateSettings <$> sketchOptions
+                           <*> option
+                             ( help "The number of memory words to simulate in total, 10 by default. This should be larger than the number of memory slots in input or output, if there are any."
+                            <> long "memory"
+                            <> short 'm'
+                            <> value 10
+                            <> metavar "WORDS" )
                            <*> arguments1 instrParser
                              ( help "The specification program in F18A syntax. Use numbers as literals without the @p."
                             <> metavar "PROGRAM" )
