@@ -32,7 +32,7 @@ cmdParser = info (helper <*> options)
 
 options :: Parser GenerateSettings
 options = GenerateSettings <$> sketchOptions
-                           <*> arguments instrParser
+                           <*> arguments1 instrParser
                              ( help "The specification program in F18A syntax. Use numbers as literals without the @p."
                             <> metavar "PROGRAM" )
   where instrParser program = case readInstruction program of
