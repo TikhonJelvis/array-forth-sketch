@@ -28,7 +28,7 @@ library
 executable generate-sk
   main-is:             generate.hs
   build-depends:       array-forth-sketch, 
-                       base ==4.6.*,      
+                       base >3 && <=5,
                        array-forth ==0.2.*,
                        optparse-applicative ==0.7.*,
                        template-haskell ==2.8.*
