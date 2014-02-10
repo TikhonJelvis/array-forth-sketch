@@ -18,6 +18,8 @@ import           Data.Char
 import           Data.Maybe
 import           Data.List
 
+import           Language.ArrayForth.Opcode (F18Word)
+
 import           Text.Printf
 
 data Register = A | B | P | R | S | T deriving (Show, Eq, Bounded, Enum)
@@ -38,6 +40,7 @@ instance Read Array where
 -- | Which parts of the state to look at for input or output.
 data Condition = Register Register
                | Array Array Int -- ^ Stack or register, with the number of entries to inspect.
+               | Value F18Word   -- ^ A literal number. This is not valid everywhere.
                deriving (Show, Eq)
 
 instance Read Condition where
@@ -56,10 +59,27 @@ instance Read [Condition] where
     where combine x [] = [([x], "")]
           combine x ((xs, str'):_) = [(x : xs, str')]
 
+instance Num Condition where
+  fromInteger = Value . fromInteger
+  (+) = binOp (+)
+  (-) = binOp (-)
+  (*) = binOp (*)
+
+binOp :: (F18Word -> F18Word -> F18Word) -> (Condition -> Condition -> Condition)
+binOp (⊕) (Value n₁) (Value n₂) = Value $ n₁ ⊕ n₂
+binOp _ _ _                     = error "Cannot do numeric options on non-literals."                                  
+
+a, b, p, r, s, t :: Condition
+[a, b, p, r, s, t] = Register <$> [A ..]
+
+data', ret, memory :: Int -> Condition
+[data', ret, memory] = Array <$> [Data ..]
+
 -- | Displays a register or array as a suitable variable name.
 toName :: Condition -> String
 toName (Register reg) = toLower <$> show reg
 toName (Array arr _)  = toLower <$> show arr
+toName (Value n)      = show n
 
 -- | Produce a literal comma-separated list using some function over conditions.
 toList :: (Condition -> String) -> [Condition] -> String
@@ -75,6 +95,7 @@ fields :: [Condition] -> String
 fields = toStatements go
   where go reg@Register{}     = printf "bit[BIT_SIZE] %s" $ toName reg
         go arr@(Array _ size) = printf "bit[BIT_SIZE][%d] %s" size $ toName arr
+        go Value{}            = error "Cannot have a literal number as a field!"
 
 -- | Arguments to the sketch and spec functions.
 arguments :: [Condition] -> String
@@ -83,13 +104,15 @@ arguments = toList $ printf "bit[BIT_SIZE] %s_input" . toName
 -- | Assignments to the starting state (s).
 fieldAssignments :: [Condition] -> String
 fieldAssignments = toStatements go
-  where go reg@Register{}     = printf "s.%s = %s_input" (toName reg) (toName reg)
+  where go reg@Register{}          = printf "s.%s = %s_input" (toName reg) (toName reg)
         go arr@(Array Memory size) = printf "s.%s = %s_input[0::%d]" (toName arr) (toName arr) size
-        go arr@(Array _ size) = printf "s.%s.body = %s_input[0::%d]" (toName arr) (toName arr) size
+        go arr@(Array _ size)      = printf "s.%s.body = %s_input[0::%d]" (toName arr) (toName arr) size
+        go Value{}                 = error "Cannot use a literal value as a field!"
 
 -- | Assignements to the returned |Ret| struct.
 returnedValues :: [Condition] -> String
 returnedValues = toList go
-  where go reg@Register{}     = printf "%s = s.%s" (toName reg) (toName reg)
+  where go reg@Register{}          = printf "%s = s.%s" (toName reg) (toName reg)
         go arr@(Array Memory size) = printf "%s = s.%s[0::%d]" (toName arr) (toName arr) size
-        go arr@(Array _ size) = printf "%s = s.%s.body[0::%d]" (toName arr) (toName arr) size
+        go arr@(Array _ size)      = printf "%s = s.%s.body[0::%d]" (toName arr) (toName arr) size
+        go Value{}                 = error "Cannot use a literal value as a field!"

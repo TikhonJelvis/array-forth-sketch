@@ -95,7 +95,7 @@ struct Ret {
 }
 
 |]
-  where specProgram = intercalate ";\n  " $ map (call bits) spec
+  where specProgram = program bits spec
         holesSk = genHoles settings holes
 
         fields      = Conditions.fields outputs
@@ -115,7 +115,10 @@ callLiteral bitSize = printf "loadLiteral({%s})" . toBits
 call :: Int -> Instruction -> String
 call _ (Opcode op)      = callOpcode op
 call bitSize (Number n) = callLiteral bitSize n
-call _ _                = error "Specs with jumps, labels or holes are not supported!"
+call _ op               = error $ "Specs with jumps, labels or holes are not supported! Instr " ++ show op ++ " is invalid"
+
+program :: Int -> Program -> String
+program bits = intercalate ";\n  " . map (call bits)
 
 genHoles :: Settings -> Int -> String
 genHoles Settings { supportedOpcodes, literalHoles } n =
