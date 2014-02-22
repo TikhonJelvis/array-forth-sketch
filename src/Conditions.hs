@@ -20,6 +20,8 @@ import           Data.List
 
 import           Language.ArrayForth.Opcode (F18Word)
 
+import           Numeric
+
 import           Text.Printf
 
 data Register = A | B | P | R | S | T deriving (Show, Eq, Bounded, Enum)
@@ -75,11 +77,19 @@ a, b, p, r, s, t :: Condition
 data', ret, memory :: Int -> Condition
 [data', ret, memory] = Array <$> [Data ..]
 
+-- | Display a number as a comma-delimited list of bits, with the
+--   least significant bit first.
+toBits :: (Integral a, Show a) => Int -> a -> String
+toBits bitSize n = intercalate "," . reverse . pad $ showIntAtBase 2 (head . show) n ""
+  where pad ls | length ls > bitSize = return <$> ls
+               | otherwise = return <$> replicate (bitSize - length ls) '0' ++ ls
+
+
 -- | Displays a register or array as a suitable variable name.
 toName :: Condition -> String
 toName (Register reg) = toLower <$> show reg
 toName (Array arr _)  = toLower <$> show arr
-toName (Value n)      = show n
+toName (Value n)      = printf "{%s}" $ toBits 18 n
 
 -- | Produce a literal comma-separated list using some function over conditions.
 toList :: (Condition -> String) -> [Condition] -> String

@@ -16,8 +16,6 @@ import           Data.List
 import           Language.ArrayForth.Opcode
 import           Language.ArrayForth.Program
 
-import           Numeric
-
 import           Text.Printf
 
 import qualified Conditions
@@ -107,10 +105,7 @@ callOpcode :: Opcode -> String
 callOpcode instr = let (f:rest) = showConstr $ toConstr instr in toLower f : rest ++ "()"
 
 callLiteral :: Int -> F18Word -> String
-callLiteral bitSize = printf "loadLiteral({%s})" . toBits
-  where toBits n = intercalate "," . reverse . pad $ showIntAtBase 2 (head . show) n ""
-        pad ls | length ls > bitSize = return <$> ls
-               | otherwise = return <$> replicate (bitSize - length ls) '0' ++ ls
+callLiteral bitSize = printf "loadLiteral({%s})" . Condition.toBits bitSize
 
 call :: Int -> Instruction -> String
 call _ (Opcode op)      = callOpcode op
