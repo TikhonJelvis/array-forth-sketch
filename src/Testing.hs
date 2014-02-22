@@ -40,14 +40,3 @@ harness void test_$name() {
 |]
   where program    = GenerateSketch.program 18 spec
         conditions = intercalate ";\n  " $ render <$> assertions
-        
--- | Given all the test functions as a string, this wraps them up with
---   the necessary initialization code and outputs the entire contents
---   of the test.sk file.
-testFile :: [String] -> String
-testFile tests = [sketch|
-include "test-instrs.sk";
-
-$testCases
-|]
-  where testCases = intercalate "\n\n" tests
