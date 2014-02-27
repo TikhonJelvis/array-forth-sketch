@@ -105,7 +105,7 @@ callOpcode :: Opcode -> String
 callOpcode instr = let (f:rest) = showConstr $ toConstr instr in toLower f : rest ++ "()"
 
 callLiteral :: Int -> F18Word -> String
-callLiteral bitSize = printf "loadLiteral({%s})" . Condition.toBits bitSize
+callLiteral bitSize = printf "loadLiteral({%s})" . Conditions.toBits bitSize
 
 call :: Int -> Instruction -> String
 call _ (Opcode op)      = callOpcode op

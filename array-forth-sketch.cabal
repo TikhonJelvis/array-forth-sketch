@@ -23,7 +23,7 @@ library
   hs-source-dirs:      src
   build-depends:       base >3 && <=5,
                        array-forth >=0.2.0.6,
-                       optparse-applicative ==0.7.*,
+                       optparse-applicative >=0.5,
                        template-haskell ==2.8.*
 
 executable generate-sk
@@ -31,7 +31,7 @@ executable generate-sk
   build-depends:       array-forth-sketch, 
                        base >3 && <=5,
                        array-forth >=0.2.0.6,
-                       optparse-applicative ==0.7.*,
+                       optparse-applicative >=0.5,
                        template-haskell ==2.8.*
   hs-source-dirs:      src
 
