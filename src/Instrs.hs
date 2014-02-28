@@ -37,12 +37,15 @@ Stack empty() { return new Stack(ptr = 0, body = {0,0,0,0,0,0,0,0}); }
 
 void push_s(Stack stack, bit[BIT_SIZE] n) {
   stack.ptr = (stack.ptr + 1) % 8;
+  assert stack.ptr < 8 && stack.ptr >= 0;
   stack.body[stack.ptr] = n;
 }
 
 bit[BIT_SIZE] pop_s(Stack stack) {
+  assert stack.ptr < 8 && stack.ptr >= 0;
   bit[BIT_SIZE] top = stack.body[stack.ptr];
-  stack.ptr = (stack.ptr - 1) % 8;
+  stack.ptr = stack.ptr - 1 >= 0 ? stack.ptr - 1 : 7;
+  assert stack.ptr < 8 && stack.ptr >= 0;
   return top;
 }
 
