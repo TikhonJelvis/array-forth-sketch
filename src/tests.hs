@@ -25,7 +25,7 @@ $testStr
 
 main :: IO ()
 main = do writeFile "unit-tests.sk" testSk
-          writeFile "unit-tests-instrs.sk" $ program 18 10
+          writeFile "unit-tests-instrs.sk" $ program 18 15
           putStrLn "Generated unit-tests.sk and unit-tests-instrs.sk."
 
 -- | A bunch of test cases, mostly taken from my array-forth
@@ -49,7 +49,6 @@ tests = [
     p := 5,
     t := 42,
     b := 4,
-    memory 4 := memory 4,
     Unchanged [a, r, s]
     ],
 
@@ -65,7 +64,7 @@ tests = [
     memory 0 := 123,
     memory 1 := 456,
     memory 2 := 474,
-    7 := p,
+    p := 7,
     Unchanged [b, r, s, t]
     ],
 
