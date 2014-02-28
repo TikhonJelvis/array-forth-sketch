@@ -174,6 +174,10 @@ instrs = [
   s.a++;
   |],
 
+  instr "fetch" [sketch|
+  push_d(s, s.memory[to_int(s.a)]);
+  |],
+
   instr "fetchB" [sketch|
   push_d(s, s.memory[to_int(s.b)]);
   |],
@@ -184,9 +188,20 @@ instrs = [
   s.p++;
   |],
 
+  instr "storePlus" [sketch|
+  bit[BIT_SIZE] temp = pop_d(s);
+  s.memory[to_int(s.a)] = temp;
+  s.a++;
+  |],
+
   instr "storeB" [sketch|
   bit[BIT_SIZE] temp = pop_d(s);
   s.memory[to_int(s.b)] = temp;
+  |],
+
+  instr "store" [sketch|
+  bit[BIT_SIZE] temp = pop_d(s);
+  s.memory[to_int(s.a)] = temp;
   |],
 
   instr "multiplyStep" [sketch|
