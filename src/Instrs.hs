@@ -2,13 +2,15 @@
 
 module Instrs where
 
-import SketchQQ
+import qualified Data.List as List
+
+import           SketchQQ
 
 generateInstrs :: IO ()
-generateInstrs = writeFile "instrs.sk" $ instrs 18 10
+generateInstrs = writeFile "instrs.sk" $ program 18 10
 
-instrs :: Int -> Int -> String
-instrs bits memory = [sketch|
+program :: Int -> Int -> String
+program bits memory = [sketch|
 
 int MEM_SIZE = $memorySize;
 int BIT_SIZE = $bitSize;
@@ -79,8 +81,18 @@ State s = new State(a      = 0,
                     ret    = new Stack(ptr = 0, body = {0,0,0,0,0,0,0,0}),
                     memory = {});
 
+// Used to determine when to increment p
+int step = 0;
+
 void reset() {
   s = start();
+}
+
+// Fixes off-by-one errors in the program counter.
+void finalize() {
+  if (step % 4 != 0) {
+    s.p++;
+  }
 }
 
 bit[BIT_SIZE] pop_d(State s) {
@@ -108,163 +120,145 @@ void push_r(State s, bit[BIT_SIZE] value) {
   s.r = value;
 }
 
-bit[BIT_SIZE] ret() {
-  s.p = s.r;
-  return pop_r(s);
-}
+$body
+|]
+  where bitSize    = show bits
+        memorySize = show memory
+        body       = List.intercalate "\n\n" instrs
 
-bit[BIT_SIZE] exec() {
+
+instr name body = [sketch|
+bit[BIT_SIZE] $name() {
+$body
+  step++;
+  if (step % 4 == 0) {
+    s.p++;
+  }
+  return 0;
+}
+|]
+
+instrs = [ 
+-- ret used to return pop_r(s) but I'm honestly not sure why.
+  instr "ret" [sketch| 
+  s.p = s.r;
+  step = 0;
+  pop_r(s);
+  |],
+
+  instr "exec" [sketch|
   bit[BIT_SIZE] temp = s.r;
   s.r = s.p;
   s.p = temp;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] unext() {
+  instr "unext" [sketch|
   if (s.r == 0) {
     pop_r(s);
   } else {
     s.r--;
     s.p--;
   }
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] fetchP() {
+  instr "fetchP" [sketch|
   push_d(s, s.memory[to_int(s.p)]);
   s.p++;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] fetchPlus() {
+  instr "fetchPlus" [sketch|
   push_d(s, s.memory[to_int(s.a)]);
   s.a++;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] fetchB() {
+  instr "fetchB" [sketch|
   push_d(s, s.memory[to_int(s.b)]);
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] fetch() {
-  push_d(s, s.memory[to_int(s.a)]);
-  return 0;
-}
-
-bit[BIT_SIZE] storeP() {
+  instr "storeP" [sketch|
   bit[BIT_SIZE] temp = pop_d(s);
   s.memory[to_int(s.p)] = temp;
   s.p++;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] storePlus() {
-  bit[BIT_SIZE] temp = pop_d(s);
-  s.memory[to_int(s.a)] = temp;
-  s.a++;
-  return 0;
-}
-
-bit[BIT_SIZE] storeB() {
+  instr "storeB" [sketch|
   bit[BIT_SIZE] temp = pop_d(s);
   s.memory[to_int(s.b)] = temp;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] store() {
-  bit[BIT_SIZE] temp = pop_d(s);
-  s.memory[to_int(s.a)] = temp;
-  return 0;
-}
-
-bit[BIT_SIZE] multiplyStep() {
+  instr "multiplyStep" [sketch|
   return 0; // I'm too lazy to implement multiply step at the moment.
-}
+  |],
 
-bit[BIT_SIZE] times2() {
+  instr "times2" [sketch|
   s.t = s.t >> 1;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] div2() {
+  instr "div2" [sketch|
   s.t = s.t << 1;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] not() {
+  instr "not" [sketch|
   s.t = ~s.t;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] plus() {
+  instr "plus" [sketch|
   bit[BIT_SIZE] res = s.t + s.s;
   pop_d(s);
   s.t = res;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] and() {
+  instr "and" [sketch|
   bit[BIT_SIZE] temp = pop_d(s);
   s.t = s.t & temp;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] or() {
+  instr "or" [sketch|
   bit[BIT_SIZE] temp = pop_d(s);
   s.t = s.t ^ temp;
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] drop() {
+  instr "drop" [sketch|
   pop_d(s);
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] dup() {
+  instr "dup" [sketch|
   push_d(s, s.t);
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] pop() {
+  instr "pop" [sketch|
   push_d(s, pop_r(s));
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] over() {
+  instr "over" [sketch|
   push_d(s, s.s);
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] readA() {
+  instr "readA" [sketch|
   push_d(s, s.a);
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] nop() {
-  return 0;
-}
+  instr "nop" [sketch|
+  |],
 
-bit[BIT_SIZE] push() {
+  instr "push" [sketch|
   push_r(s, pop_d(s));
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] setB() {
+  instr "setB" [sketch|
   s.b = pop_d(s);
-  return 0;
-}
+  |],
 
-bit[BIT_SIZE] setA() {
+  instr "setA" [sketch|
   s.a = pop_d(s);
-  return 0;
-}
+  |],
 
+  [sketch|
 bit[BIT_SIZE] loadLiteral(bit[BIT_SIZE] literal) {
   push_d(s, literal);
+  step = 0;
+  s.p++;
   return 0;
 }
-
-|]
-  where bitSize    = show bits
-        memorySize = show memory
+  |]
+  ]

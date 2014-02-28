@@ -37,6 +37,7 @@ test name (fromNative -> spec) assertions = [sketch|
 harness void test_$name() {
   reset();
   $program;
+  finalize();
   $conditions;
 }
 |]

@@ -81,6 +81,7 @@ struct Ret {
   reset();
   $assignments;
   $specProgram;
+  finalize();
   return |Ret|($retVals);
 }
 
@@ -89,6 +90,7 @@ struct Ret {
   $assignments;
   bit[BIT_SIZE] ignore = 0;
   $holesSk
+  finalize();
   return |Ret|($retVals);
 }
 
