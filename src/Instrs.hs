@@ -91,13 +91,6 @@ void reset() {
   s = start();
 }
 
-// Fixes off-by-one errors in the program counter.
-void finalize() {
-  if (step % 4 != 0) {
-    s.p++;
-  }
-}
-
 bit[BIT_SIZE] pop_d(State s) {
   bit[BIT_SIZE] temp = s.t;
   bit[BIT_SIZE] res = pop_s(s.data);
@@ -132,11 +125,11 @@ $body
 
 instr name body = [sketch|
 bit[BIT_SIZE] $name() {
-$body
-  step++;
   if (step % 4 == 0) {
     s.p++;
   }
+  step++;
+$body
   return 0;
 }
 |]
