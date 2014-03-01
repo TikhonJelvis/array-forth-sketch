@@ -123,8 +123,8 @@ tests = [
     Unchanged [b, r, s]
     ],
 
-  test "storePlus3" "dup or a! @p 123 !+ @p . . 456" [
-    a := 1,
+  test "storePlus3" "dup or a! @p 123 !+ @p !+ . 456" [
+    a := 2,
     memory 0 := 123,
     memory 1 := 456,
     Unchanged [b, r, s, t]
