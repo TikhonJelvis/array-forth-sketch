@@ -148,14 +148,17 @@ instrs = [
   s.p = temp;
   |],
 
-  instr "unext" [sketch|
-  if (s.r == 0) {
-    pop_r(s);
-  } else {
-    s.r--;
-    s.p--;
-  }
-  |],
+  -- XXX: I think unext exposes a weird bug in Sketch
+  -- Error: The parents of a boolean operator must be boolean !!!  mth=name_259__ARR_R  fth=C1
+
+  -- instr "unext" [sketch|
+  -- if (s.r == 0) {
+  --   pop_r(s);
+  -- } else {
+  --   s.r--;
+  --   s.p--;
+  -- }
+  -- |],
 
   instr "fetchP" [sketch|
   push_d(s, s.memory[to_int(s.p)]);
