@@ -205,11 +205,11 @@ instrs = [
   |],
 
   instr "times2" [sketch|
-  s.t = s.t >> 1;
+  s.t = s.t << 1;
   |],
 
   instr "div2" [sketch|
-  s.t = s.t << 1;
+  s.t = s.t >> 1;
   |],
 
   instr "not" [sketch|
