@@ -11,7 +11,7 @@ import           Text.Printf
 
 import           Conditions (Register (..), Condition (..))
 import           GenerateSketch
-import           Instrs
+import qualified Instrs
 
 data GenerateSettings =
   GenerateSettings { sketchSettings :: Settings
@@ -24,7 +24,7 @@ main :: IO ()
 main = do GenerateSettings {..} <- execParser cmdParser
           let Settings {..} = sketchSettings
           writeFile (printf "%s-sketch.sk" prefix) $ harness sketchSettings program
-          writeFile (printf "%s-instrs.sk" prefix) $ instrs bits memorySize
+          writeFile (printf "%s-instrs.sk" prefix) $ Instrs.program bits memorySize
           printf "Generated %s-sketch.sk and %s-instrs.sk.\n" prefix prefix
 
 cmdParser :: ParserInfo GenerateSettings
