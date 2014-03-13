@@ -269,6 +269,11 @@ instrs = [
 
   [sketch|
 bit[BIT_SIZE] loadLiteral(bit[BIT_SIZE] literal) {
+  if (step % 4 == 0) {
+    s.p++;
+  }
+  step++;
+
   push_d(s, literal);
   s.p++;
   return 0;
