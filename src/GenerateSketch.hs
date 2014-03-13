@@ -79,6 +79,8 @@ struct Ret {
            
 |Ret| spec($arguments) {
   reset();
+  int step = 0;
+
   $assignments;
   $specProgram;
   return |Ret|($retVals);
@@ -86,8 +88,9 @@ struct Ret {
 
 |Ret| sketch($arguments) implements spec {
   reset();
+  int step = 0;
+
   $assignments;
-  bit[BIT_SIZE] ignore = 0;
   $holesSk
   return |Ret|($retVals);
 }
@@ -102,10 +105,10 @@ struct Ret {
         retVals     = Conditions.returnedValues outputs
 
 callOpcode :: Opcode -> String
-callOpcode instr = let (f:rest) = showConstr $ toConstr instr in toLower f : rest ++ "()"
+callOpcode instr = let (f:rest) = showConstr $ toConstr instr in toLower f : rest ++ "(step)"
 
 callLiteral :: Int -> F18Word -> String
-callLiteral bitSize = printf "loadLiteral({%s})" . Conditions.toBits bitSize
+callLiteral bitSize = printf "loadLiteral({%s}, step)" . Conditions.toBits bitSize
 
 call :: Int -> Instruction -> String
 call _ (Opcode op)      = callOpcode op
@@ -113,12 +116,12 @@ call bitSize (Number n) = callLiteral bitSize n
 call _ op               = error $ "Specs with jumps, labels or holes are not supported! Instr " ++ show op ++ " is invalid"
 
 program :: Int -> Program -> String
-program bits = intercalate ";\n  " . map (call bits)
+program bits = intercalate ";\n  " . map (\ op -> "step = " ++ call bits op)
 
 genHoles :: Settings -> Int -> String
 genHoles Settings { supportedOpcodes, literalHoles } n =
   drop 2 . unlines $ replicate n [sketch|
-  ignore = {| $opcodeCalls $literalHole |};
+  step = {| $opcodeCalls $literalHole |};
 |]
   where opcodeCalls = intercalate " | " $ map callOpcode supportedOpcodes
         literalHole | literalHoles = "| loadLiteral(??)"

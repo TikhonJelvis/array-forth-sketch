@@ -84,9 +84,6 @@ State s = new State(a      = 0,
                     ret    = new Stack(ptr = 0, body = {0,0,0,0,0,0,0,0}),
                     memory = {});
 
-// Used to determine when to increment p
-int step = 0;
-
 void reset() {
   s = start();
 }
@@ -124,13 +121,13 @@ $body
 
 
 instr name body = [sketch|
-bit[BIT_SIZE] $name() {
+int $name(int step) {
   if (step % 4 == 0) {
     s.p++;
   }
   step++;
 $body
-  return 0;
+  return step % 4;
 }
 |]
 
@@ -268,7 +265,7 @@ instrs = [
   |],
 
   [sketch|
-bit[BIT_SIZE] loadLiteral(bit[BIT_SIZE] literal) {
+int loadLiteral(bit[BIT_SIZE] literal, int step) {
   if (step % 4 == 0) {
     s.p++;
   }
@@ -276,7 +273,7 @@ bit[BIT_SIZE] loadLiteral(bit[BIT_SIZE] literal) {
 
   push_d(s, literal);
   s.p++;
-  return 0;
+  return step % 4;
 }
   |]
   ]

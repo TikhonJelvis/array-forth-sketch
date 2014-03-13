@@ -36,6 +36,8 @@ test :: String -> NativeProgram -> [Assert] -> String
 test name (fromNative -> spec) assertions = [sketch|
 harness void test_$name() {
   reset();
+  int step = 0;
+  
   $program;
   $conditions;
 }
