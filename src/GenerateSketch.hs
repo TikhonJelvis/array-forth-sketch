@@ -124,5 +124,5 @@ genHoles Settings { supportedOpcodes, literalHoles } n =
   step = {| $opcodeCalls $literalHole |};
 |]
   where opcodeCalls = intercalate " | " $ map callOpcode supportedOpcodes
-        literalHole | literalHoles = "| loadLiteral(??)"
+        literalHole | literalHoles = "| loadLiteral(??, step)"
                     | otherwise    = ""
